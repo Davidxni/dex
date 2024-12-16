@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QomSwap WalletConnect</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.5/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.7.9/dist/umd/index.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f9f9f9;
+        }
+        iframe {
+            width: 100%;
+            height: 80vh;
+            border: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #wallet-status {
+            margin: 10px 0;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>QomSwap DEX</h1>
+    <button id="connect-wallet">Connect Wallet</button>
+    <p id="wallet-status">No wallet connected</p>
+    <iframe id="qomswap" src="https://www.qomswap.com/swap?chainId=766&inputCurrency=0xb3548d6496C65C8737D5e23076fe83f2f6c050B6&outputCurrency=QOM"></iframe>
+
+    <script>
+        async function connectWallet() {
+            // Initialize WalletConnect Provider
+            const provider = new WalletConnectProvider.default({
+                rpc: {
+                    766: "https://rpc.qom.one", // Qom network RPC
+                },
+            });
+
+            try {
+                // Enable session (shows QR code or connects mobile wallets)
+                await provider.enable();
+
+                // Create Web3 instance
+                const web3 = new Web3(provider);
+
+                // Fetch connected wallet accounts
+                const accounts = await web3.eth.getAccounts();
+                const chainId = await web3.eth.getChainId();
+
+                // Display connected wallet info
+                document.getElementById("wallet-status").innerText = 
+                    `Connected Wallet: ${accounts[0]} (Chain ID: ${chainId})`;
+
+                console.log("Connected Wallet:", accounts[0]);
+                console.log("Chain ID:", chainId);
+
+                // Ensure correct chain ID (766 for Qom)
+                if (chainId !== 766) {
+                    alert("Please switch to the Qom network (Chain ID 766) in your wallet.");
+                }
+
+                // Disconnect wallet when done
+                provider.on("disconnect", () => {
+                    document.getElementById("wallet-status").innerText = "Wallet disconnected";
+                });
+            } catch (error) {
+                console.error("Wallet connection failed:", error);
+                document.getElementById("wallet-status").innerText = "Connection failed. Please try again.";
+            }
+        }
+
+        document.getElementById("connect-wallet").addEventListener("click", connectWallet);
+    </script>
+</body>
+</html>
